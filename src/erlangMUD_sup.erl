@@ -38,26 +38,28 @@ init([]) ->
 %% Internal functions
 %%====================================================================
 startServer() -> 
-    {ok, ListenSocket} = gen_tcp:listen(8080, [{active,false}, {reuseaddr, true}, binary]),
-    spawn(erlangMUD_sup, server, [ListenSocket]).
+    {ok, ListenSocket} = gen_tcp:listen(8080, [{active,false}, 
+        {reuseaddr, true}, {packet, line}, binary]),
+    spawn_link(?MODULE, server, [ListenSocket]).
 
 server(ListenSocket) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),
+    % send welcome message
+    gen_tcp:send(Socket, "Welcome to erlangMUD!\n"),
+    c:flush(),
     % spawn a new client-process
-    Pid = spawn(erlangMUD_sup, clientProc, [Socket]),
+    Pid = spawn_link(?MODULE, clientProc, [Socket]),
     % give ownership of the socket to the client process
-    %gen_tcp:controlling_process(Pid, Socket),
+    gen_tcp:controlling_process(Socket, Pid),
     server(ListenSocket).
 
-clientProc(Socket) -> 
+clientProc(Socket) ->
     inet:setopts(Socket, [{active, once}]),
-    %gen_tcp:send(Socket, "Welcome to erlangMUD!\n"),
-    %c:flush(),
     receive
         {tcp, Socket, <<"quit", _/binary>>} ->
             gen_tcp:close(Socket);
         {tcp, Socket, Msg} ->
             gen_tcp:send(Socket, Msg),
-            io:format("~s", [Msg]),
+            io:fwrite("Message: ~s ~n", [Msg]),
             clientProc(Socket)
     end.
