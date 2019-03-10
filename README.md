@@ -1,4 +1,4 @@
-erlangMUD
+erlMUS
 =====
 
 An OTP application

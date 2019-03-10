@@ -1,0 +1,42 @@
+Inspiration
+A mix of MUD gaming and agent-based simulation (ABS). Inspired by MUDs where 
+players can join simply through telnet. Big difference is that there is more 
+focus on the simulation aspect than on the dungeon aspect, therefore it is 
+named erlMUS for "Erlang Multi-User Simulation".
+The inspiration from the simulation side is the Sugarscape simulation where 
+agents move around in a 2 dimensional discrete world and engage with each other
+to contract and pass on diseases, mate with each other, lend and borrow 
+ressources, pollute the environment,... 
+
+The Player
+- Each player starts with same initial properties: 
+  -> Health: 100 points, when reaching 0 the player dies.
+  -> 2 Resource slot: Each slot can carry 100 resources of any type. Initially
+     100 resources.
+  -> Metabolism rate: The amount of resources the metabolism of the player 
+     needs per time-unit to sustain the player. Initially it is 0.027 per second
+     which means the player will start to starve after around 3600 time units if no 
+     resources are found.
+  -> Starvation rate: The amount of health drained per time unit if the player
+     runs out of resources.
+  -> 10 Item slots: each slot can hold one item of any type.
+- A player consumes resources automatically over time due to its metabolism. rate 
+- Moving from one room to another needs resources as well, depending on the room
+- If a player has drained all its resources, it will slowly start to take damage
+  according to the starvation rate.
+- If a players health reaches 0 it will die and start again at the center.
+
+The Environment
+- resources grow in each room with varying rate and can be picked up by any player
+- picking up resources causes pollution by the following formula:
+  TODO
+- pollution diffuses to other rooms if players move between polluted rooms.
+- pollution reduces the regrow rate of the room AND increases the metabolsim and
+  starvation rate of the players by the following formula:
+    TODO
+- pollution disolves over time by a rate of 0.1 per second.
+
+Player-Player Interaction
+- players can revive other players if one has died by sacrificing resources
+- players can say and ask words in a room which all the players in that room
+  can hear.

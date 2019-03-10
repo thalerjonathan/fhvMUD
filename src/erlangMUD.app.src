@@ -1,8 +1,8 @@
-{application, erlangMUD,
+{application, erlMUS,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
   {registered, []},
-  {mod, {erlangMUD_app, []}},
+  {mod, {erlMUS_app, []}},
   {applications,
    [kernel,
     stdlib

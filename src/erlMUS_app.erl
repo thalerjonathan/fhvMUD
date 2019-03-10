@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc erlangMUD public API
+%% @doc erlMUS public API
 %% @end
 %%%-------------------------------------------------------------------
 
--module(erlangMUD_app).
+-module(erlMUS_app).
 
 -behaviour(application).
 
@@ -15,7 +15,7 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    erlangMUD_sup:start_link().
+    erlMUS_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->
