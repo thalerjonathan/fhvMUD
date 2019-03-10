@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc erlMUS top level supervisor.
+%% @doc chimeraMUS top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 
--module(erlMUS_sup).
+-module(chimeraMUS_sup).
 
 -behaviour(supervisor).
 
@@ -45,7 +45,7 @@ startServer() ->
 server(ListenSocket) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),
     % send welcome message
-    gen_tcp:send(Socket, "Welcome to Erlang Multi-User Simulation!\n"),
+    gen_tcp:send(Socket, "Welcome to Chimera Multi-User Simulation!\n"),
     c:flush(),
     % spawn a new client-process
     Pid = spawn_link(?MODULE, clientProc, [Socket]),

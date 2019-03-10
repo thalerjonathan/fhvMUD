@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc erlMUS public API
+%% @doc chimeraMUS public API
 %% @end
 %%%-------------------------------------------------------------------
 
--module(erlMUS_app).
+-module(chimeraMUS_app).
 
 -behaviour(application).
 
@@ -15,7 +15,7 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    erlMUS_sup:start_link().
+    chimeraMUS_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->

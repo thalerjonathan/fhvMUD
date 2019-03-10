@@ -1,8 +1,8 @@
-{application, erlMUS,
+{application, chimeraMUS,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
   {registered, []},
-  {mod, {erlMUS_app, []}},
+  {mod, {chimeraMUS_app, []}},
   {applications,
    [kernel,
     stdlib
