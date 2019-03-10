@@ -3,7 +3,7 @@
 %% @end
 %%%-------------------------------------------------------------------
 
--module(erlangMUD_sup).
+-module(erlMUS_sup).
 
 -behaviour(supervisor).
 
@@ -45,7 +45,7 @@ startServer() ->
 server(ListenSocket) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),
     % send welcome message
-    gen_tcp:send(Socket, "Welcome to erlangMUD!\n"),
+    gen_tcp:send(Socket, "Welcome to Erlang Multi-User Simulation!\n"),
     c:flush(),
     % spawn a new client-process
     Pid = spawn_link(?MODULE, clientProc, [Socket]),
