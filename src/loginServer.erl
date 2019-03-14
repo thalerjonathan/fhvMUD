@@ -2,18 +2,15 @@
 
 -export([startServer/1, serverProc/2]).
 
-%%====================================================================
-%% Internal functions
-%%====================================================================
-startServer(Sid) -> 
+startServer(Simulation) -> 
     {ok, ListenSocket} = gen_tcp:listen(8080, [{active,false}, 
         {reuseaddr, true}, {packet, line}, binary]),
-    spawn(?MODULE, serverProc, [Sid, ListenSocket]).
+    spawn(?MODULE, serverProc, [Simulation, ListenSocket]).
 
-serverProc(Sid, ListenSocket) ->
+serverProc(Simulation, ListenSocket) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),
     % send welcome message
     gen_tcp:send(Socket, "Welcome to Chimera Multi-User Simulation!\n"),
     c:flush(),
-    playerfrontend:newPlayer(Sid, Socket),
-    serverProc(Sid, ListenSocket).
+    playerFrontend:spawnPlayer(Simulation, Socket),
+    serverProc(Simulation, ListenSocket).

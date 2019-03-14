@@ -1,15 +1,16 @@
--module(playerfrontend).
+-module(playerFrontend).
 
--export([newPlayer/1, playerSocketProc/1]).
+-export([spawnPlayer/2, playerSocketProc/3]).
 
-newPlayer(Socket) -> 
+spawnPlayer(Simulation, Socket) -> 
+  Player = player:newPlayer(Simulation),
   % spawn a new client-process
-  Pid = spawn(?MODULE, playerSocketProc, [Socket]),
+  Pid = spawn(?MODULE, playerSocketProc, [Simulation, Player, Socket]),
   % give ownership of the socket to the client process
   gen_tcp:controlling_process(Socket, Pid),
   Pid.
 
-playerSocketProc(Socket) ->
+playerSocketProc(Simulation, Player, Socket) ->
   inet:setopts(Socket, [{active, once}]),
   receive
     {tcp, Socket, <<"quit", _/binary>>} ->
@@ -17,5 +18,5 @@ playerSocketProc(Socket) ->
     {tcp, Socket, Msg} ->
         gen_tcp:send(Socket, Msg),
         io:fwrite("Message: ~s ~n", [Msg]),
-        playerSocketProc(Socket)
+        playerSocketProc(Simulation, Player, Socket)
   end.
