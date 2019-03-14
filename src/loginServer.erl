@@ -8,7 +8,7 @@
 startServer(Sid) -> 
     {ok, ListenSocket} = gen_tcp:listen(8080, [{active,false}, 
         {reuseaddr, true}, {packet, line}, binary]),
-    spawn_link(?MODULE, serverProc, [Sid, ListenSocket]).
+    spawn(?MODULE, serverProc, [Sid, ListenSocket]).
 
 serverProc(Sid, ListenSocket) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),

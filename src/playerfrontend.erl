@@ -4,7 +4,7 @@
 
 newPlayer(Socket) -> 
   % spawn a new client-process
-  Pid = spawn_link(?MODULE, playerSocketProc, [Socket]),
+  Pid = spawn(?MODULE, playerSocketProc, [Socket]),
   % give ownership of the socket to the client process
   gen_tcp:controlling_process(Socket, Pid),
   Pid.

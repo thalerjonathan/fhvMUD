@@ -2,12 +2,16 @@
 
 -export([init/0, simProc/0]).
 
-% -define(SERVER, ?MODULE).
-
 init() ->
   io:fwrite("init sim"),
-  spawn_link(?MODULE, simpProc, []).
+  Sid = spawn(?MODULE, simpProc, []),
+  io:fwrite("Sid: ~p ~n", [Sid]),
+  Sid.
 
 simProc() ->
   io:fwrite("simPRoc"),
-  simProc.
+  receive 
+    {newPlayer} ->
+      io:fwrite("New Player"),
+      simProc()
+  end.
