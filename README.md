@@ -1,4 +1,4 @@
-erlMUS
+chimeraMUS
 =====
 
 An OTP application
