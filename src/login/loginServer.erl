@@ -3,14 +3,13 @@
 -export([startServer/1, serverProc/2]).
 
 startServer(Simulation) -> 
-    {ok, ListenSocket} = gen_tcp:listen(8080, [{active,false}, 
+    % needs active true, otherwise cannot transfer ownership of socket
+    % to player frontend
+    {ok, ListenSocket} = gen_tcp:listen(8080, [{active,true}, 
         {reuseaddr, true}, {packet, line}, binary]),
     spawn(?MODULE, serverProc, [Simulation, ListenSocket]).
 
 serverProc(Simulation, ListenSocket) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),
-    % send welcome message
-    gen_tcp:send(Socket, "Welcome to Chimera Multi-User Simulation!\n"),
-    c:flush(),
     playerFrontend:spawnPlayer(Simulation, Socket),
     serverProc(Simulation, ListenSocket).

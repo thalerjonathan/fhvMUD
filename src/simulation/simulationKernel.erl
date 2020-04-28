@@ -10,7 +10,7 @@ init() ->
 simProc() ->
   io:fwrite("Simulation Kernel running ~n"),
   receive 
-    {newPlayer, Player} ->
-      io:fwrite("New Player ~p ~n", [Player]),
+    {newPlayer, Pid, PlayerName} ->
+      io:fwrite("New Player ~p ~s ~n", [Pid, PlayerName]),
       simProc()
   end.
