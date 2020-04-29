@@ -10,6 +10,7 @@ spawnPlayer(Simulation, Socket) ->
   io:fwrite("controlling_process: ~w ~n", [Ret]),
   Pid.
 
+%% TODO can we replace it by a fun in spawn so to make it not public?
 playerSocketProc(Simulation, Socket) ->
   % send welcome message
   
@@ -26,32 +27,35 @@ playerSocketProc(Simulation, Socket) ->
       Msg = io_lib:format("Hello ~s! Welcome to Chimera Multi-User Simulation!\n\n", [PlayerName]),
       gen_tcp:send(Socket, Msg),
 
-      Player = player:newPlayer(Simulation, PlayerName),
-      receiveInput(Simulation, Player, Socket)
+      Player = player:newPlayer(Simulation, self(), PlayerName),
+      process(Simulation, Player, Socket)
   end.
 
 queryName(Socket) ->
   gen_tcp:send(Socket, "Please enter your name: "),
   receive
     {tcp, Socket, <<"quit", _/binary>>} ->
-        {error, quit};
+      {error, quit};
     {tcp, Socket, Binary} ->
-        % transform binary to string
-        Pn = binary_to_list(Binary),
-        % drop last character, which is ENTER
-        PlayerName = string:substr(Pn, 1, string:length(Pn) - 1),
-        {ok, PlayerName}
+      % transform binary to string
+      Pn = binary_to_list(Binary),
+      % drop last character, which is ENTER
+      PlayerName = string:substr(Pn, 1, string:length(Pn) - 1),
+      {ok, PlayerName}
   after 
     10000 ->
       {error, timeout}
   end.
 
-receiveInput(Simulation, Player, Socket) ->
+process(Simulation, Player, Socket) ->
   receive
     {tcp, Socket, <<"quit", _/binary>>} ->
-        gen_tcp:close(Socket);
+      gen_tcp:close(Socket);
     {tcp, Socket, Msg} ->
-        gen_tcp:send(Socket, Msg),
-        io:fwrite("Message: ~s ~n", [Msg]),
-        receiveInput(Simulation, Player, Socket)
+      gen_tcp:send(Socket, Msg),
+      io:fwrite("Player typed: ~s ~n", [Msg]),
+      process(Simulation, Player, Socket);
+    {sendText, Text} ->
+      gen_tcp:send(Socket, Text),
+      process(Simulation, Player, Socket)
   end.

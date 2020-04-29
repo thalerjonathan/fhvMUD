@@ -1,14 +1,16 @@
 -module(player).
 
--export([newPlayer/2, playerProc/2]).
+-export([newPlayer/3, playerProc/3]).
 
-newPlayer(Simulation, PlayerName) ->
-  Pid = spawn(?MODULE, playerProc, [Simulation, PlayerName]),
+newPlayer(Simulation, PlayerFrontend, PlayerName) ->
+  Pid = spawn(?MODULE, playerProc, [Simulation, PlayerFrontend, PlayerName]),
   Simulation ! {newPlayer, Pid, PlayerName},
   Pid.
 
-playerProc(Simulation, PlayerName) ->
+playerProc(Simulation, PlayerFrontend, PlayerName) ->
   receive 
     {forward} ->
-      playerProc(Simulation, PlayerName)
+      playerProc(Simulation, PlayerFrontend, PlayerName);
+    {enteredRoom, RoomPid, RoomName } ->
+      PlayerFrontend ! {sendText, io_lib:format("Entered Room ~s ~n", [RoomName])}
   end.
