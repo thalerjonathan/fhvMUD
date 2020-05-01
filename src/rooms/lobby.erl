@@ -1,14 +1,25 @@
 -module(lobby).
 
--export([startLobby/1, lobbyProc/1]).
+-export([new/1, playerEnter/2]).
 
-startLobby(Simulation) ->
-  Pid = spawn(?MODULE, lobbyProc, [Simulation]),
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PUBLIC 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+new(Simulation) ->
+  Pid = spawn(fun() -> process(Simulation) end),
   Pid.
 
-lobbyProc(Simulation) ->
+playerEnter(Lobby, Player) ->
+  Lobby ! { playerEnter, Player }.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PRIVATE 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+process(Simulation) ->
   receive
     Msg ->
       io:fwrite("Lobby: received message ~w ~n", [Msg]),
-      lobbyProc(Simulation)  
+      process(Simulation)
   end.

@@ -1,16 +1,34 @@
 -module(player).
 
--export([newPlayer/3, playerProc/3]).
+-export([new/3, remove/1, enteredRoom/3]).
 
-newPlayer(Simulation, PlayerFrontend, PlayerName) ->
-  Pid = spawn(?MODULE, playerProc, [Simulation, PlayerFrontend, PlayerName]),
-  Simulation ! {newPlayer, Pid, PlayerName},
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PUBLIC 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+new(Simulation, Frontend, PlayerName) ->
+  Pid = spawn(fun() -> process(Simulation, Frontend, PlayerName) end),
+  simulation:newPlayer(Simulation, Pid),
   Pid.
 
-playerProc(Simulation, PlayerFrontend, PlayerName) ->
+remove(Player) ->
+  Player ! {remove}.
+
+% TODO FIX: the roomname should be known only by the room itself!
+enteredRoom(Player, Room, RoomName) ->
+  Player ! {enteredRoom, Room, RoomName}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PRIVATE 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+process(Simulation, Frontend, PlayerName) ->
   receive 
-    {forward} ->
-      playerProc(Simulation, PlayerFrontend, PlayerName);
-    {enteredRoom, RoomPid, RoomName } ->
-      PlayerFrontend ! {sendText, io_lib:format("Entered Room ~s ~n", [RoomName])}
+    {remove} ->
+      io:fwrite("player: removed ~w ~n", [PlayerName]);
+    {enteredRoom, Room, RoomName } ->
+      playerFrontend:sendText(Frontend, "Entered Room ~w ~s ~n", [Room, RoomName]);
+    Msg ->
+      io:fwrite("Received unknown message in player: ~w ~n", [Msg]),
+      process(Simulation, Frontend, PlayerName)
   end.
