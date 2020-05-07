@@ -2,6 +2,8 @@
 
 -export([new/2, sendText/3]).
 
+-record(ctx, {sock, sim, player, playername}).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,11 +36,16 @@ init(Simulation, Socket) ->
       io:fwrite("Timeout, disconnected player ~w ~n", [self()]);
 
     {ok, PlayerName} ->
-      Msg = io_lib:format("Hello ~s! Welcome to Chimera Multi-User Simulation!\n\n", [PlayerName]),
-      gen_tcp:send(Socket, Msg),
-      Player = player:new(Simulation, self(), PlayerName),
-      process(Simulation, Player, Socket)
+      Msg = io_lib:format("Hello ~s! 
+        Welcome to Chimera Multi-User Simulation!\n\n", 
+        [PlayerName]),
 
+      gen_tcp:send(Socket, Msg),
+
+      Player = player:new(Simulation, self(), PlayerName),
+      Context = #ctx{sim = Simulation, sock = Socket, player = Player, 
+                     playername = PlayerName},
+      process(Context)
   end.
 
 queryName(Socket) ->
@@ -60,26 +67,43 @@ queryName(Socket) ->
       {error, timeout}
   end.
 
-process(Simulation, Player, Socket) ->
+process(Context) ->
   receive
     {tcp, Socket, <<"quit", _/binary>>} ->
       gen_tcp:close(Socket);
 
     {tcp, Socket, Msg} ->
       gen_tcp:send(Socket, Msg),
-      io:fwrite("Player typed: ~s ~n", [Msg]),
-      process(Simulation, Player, Socket);
+      handlePlayerInput(Msg, Context),
+      process(Context);
     
     {sendText, Text} ->
-      gen_tcp:send(Socket, Text),
-      process(Simulation, Player, Socket);
+      gen_tcp:send(Context#ctx.sock, Text),
+      process(Context);
 
     {tcp_closed, Socket} ->
       io:fwrite("playerFrontend: socket ~w closed by player, removing player from simulation... ~n", [Socket]),
-      player:remove(Player),
-      simulation:removePlayer(Simulation, Player);
+      player:remove(Context#ctx.player),
+      simulation:removePlayer(Context#ctx.sim, Context#ctx.player);
 
-    Msg ->
-      io:fwrite("playerFrontend received message: ~w ~n", [Msg]),
-      process(Simulation, Player, Socket)
+    Other -> % Flushes the message queue.
+      error_logger:error_msg(
+          "Error: PlayerFrontend ~w got unknown msg ~w~n.", 
+          [self(), Other]),
+      process(Context)
   end.
+
+handlePlayerInput(Msg, Context) ->
+  MsgTrim = string:trim(Msg),
+  io:fwrite("Player typed: ~s ~n", [Msg]),
+
+  Val = string:equal("say", MsgTrim, true),
+
+  if 
+    Val ->
+      io:fwrite("Player typed: ~s ~n", [Msg]);
+    true ->
+      io:fwrite("Player typed: ~s ~n", [Msg])
+  end,
+
+  ok.

@@ -2,12 +2,15 @@
 
 -export([new/3, remove/1, enteredRoom/3]).
 
+-record(ctx, {sim, front, name}).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 new(Simulation, Frontend, PlayerName) ->
-  Pid = spawn(fun() -> process(Simulation, Frontend, PlayerName) end),
+  Ctx = #ctx{sim=Simulation, front=Frontend, name=PlayerName},
+  Pid = spawn(fun() -> process(Ctx) end),
   simulation:newPlayer(Simulation, Pid),
   Pid.
 
@@ -22,13 +25,19 @@ enteredRoom(Player, Room, RoomName) ->
 %% PRIVATE 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-process(Simulation, Frontend, PlayerName) ->
+process(Ctx) ->
   receive 
     {remove} ->
-      io:fwrite("player: removed ~w ~n", [PlayerName]);
-    {enteredRoom, Room, RoomName } ->
-      playerFrontend:sendText(Frontend, "Entered Room ~w ~s ~n", [Room, RoomName]);
-    Msg ->
-      io:fwrite("Received unknown message in player: ~w ~n", [Msg]),
-      process(Simulation, Frontend, PlayerName)
+      io:fwrite("player: removed ~w ~n", [Ctx#ctx.name]);
+
+    {enteredRoom, Room, RoomName} ->
+      playerFrontend:sendText(Ctx#ctx.front, 
+        "Entered Room ~w ~s ~n", 
+        [Room, RoomName]);
+
+    Other -> % Flushes the message queue.
+      error_logger:error_msg(
+        "Error: Player ~w got unknown msg ~w~n.", 
+        [self(), Other]),
+      process(Ctx)
   end.

@@ -2,6 +2,8 @@
 
 -export([new/0, newPlayer/2, removePlayer/2]).
 
+-record(ctx, {lobby}).
+
 % TODO follow http://www.erlang.se/doc/programming_rules.shtml
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -26,21 +28,27 @@ removePlayer(Simulation, Player) ->
 init() ->
   Lobby = loadWorld(),
   io:fwrite("Simulation running ~n"),
-  process(Lobby).
+  process(#ctx{lobby=Lobby}).
 
 loadWorld() ->
   Lobby = lobby:new(self()),
   Lobby.
 
-process(Lobby) ->
+process(Ctx) ->
   receive 
     {newPlayer, Player} ->
       io:fwrite("New Player ~w ~n", [Player]),
-      player:enteredRoom(Player, Lobby, "Lobby"),
-      lobby:playerEnter(Lobby, Player),
-      process(Lobby);
+      player:enteredRoom(Player, Ctx#ctx.lobby, "Lobby"),
+      lobby:playerEnter(Ctx#ctx.lobby, Player),
+      process(Ctx);
 
     {removePlayer, Player} ->
       io:fwrite("simulation: removed player ~w... ~n", [Player]),
-      process(Lobby)
+      process(Ctx);
+
+    Other -> % Flushes the message queue.
+      error_logger:error_msg(
+        "Error: Simulation ~w got unknown msg ~w~n.", 
+        [self(), Other]),
+      process(Ctx)
   end.
