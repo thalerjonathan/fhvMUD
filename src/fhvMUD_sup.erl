@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc chimeraMUS top level supervisor.
+%% @doc fhvMUD top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
 
--module(chimeraMUS_sup).
+-module(fhvMUD_sup).
 
 -behaviour(supervisor).
 

@@ -1,8 +1,8 @@
-{application, chimeraMUS,
+{application, fhvMUD,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
   {registered, []},
-  {mod, {chimeraMUS_app, []}},
+  {mod, {fhvMUD_app, []}},
   {applications,
    [kernel,
     stdlib

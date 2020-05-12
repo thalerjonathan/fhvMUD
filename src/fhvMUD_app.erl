@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
-%% @doc chimeraMUS public API
+%% @doc fhvMUD public API
 %% @end
 %%%-------------------------------------------------------------------
 
--module(chimeraMUS_app).
+-module(fhvMUD_app).
 
 -behaviour(application).
 
@@ -15,7 +15,7 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    chimeraMUS_sup:start_link().
+    fhvMUD_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->

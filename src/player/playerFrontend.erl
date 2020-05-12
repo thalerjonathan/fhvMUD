@@ -37,7 +37,7 @@ init(Simulation, Socket) ->
 
     {ok, PlayerName} ->
       Msg = io_lib:format("Hello ~s! 
-        Welcome to Chimera Multi-User Simulation!\n\n", 
+        Welcome to FHV Multi-User Dungeon!\n\n", 
         [PlayerName]),
 
       gen_tcp:send(Socket, Msg),
