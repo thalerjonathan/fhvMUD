@@ -21,7 +21,7 @@ process(Simulation, ListenSocket) ->
   Ret = gen_tcp:accept(ListenSocket),
   case Ret of 
     {ok, Socket} ->
-      playerFrontend:new(Simulation, Socket),
+      player:new(Simulation, Socket),
       process(Simulation, ListenSocket);
 
     {error,closed} ->

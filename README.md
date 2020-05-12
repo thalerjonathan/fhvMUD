@@ -11,7 +11,10 @@ fhvMUD
   -> elevator is useable and is also used by the NPCs
   -> similar architecture
 
--> add some adventure
+- add some adventure
+  => what about some recursive game? like eXistenZ or Inception? for example 
+   in the FHV is a room where we can log in into the same game. this would
+   require an indirection in player without sockets...
 
 Build
 -----
