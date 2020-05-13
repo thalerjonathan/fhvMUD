@@ -11,6 +11,10 @@ fhvMUD
   -> elevator is useable and is also used by the NPCs
   -> similar architecture
 
+- implement "spectator" of any actor
+  -> cannot put down commands
+  -> see the game from the point of view of the actor
+
 - add some adventure
   => what about some recursive game? like eXistenZ or Inception? for example 
    in the FHV is a room where we can log in into the same game. this would
