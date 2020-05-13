@@ -31,6 +31,6 @@ start_link() ->
 %% Before OTP 18 tuples must be used to specify a child. e.g.
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    Simulation = simulation:new(),
+    Simulation = mud:new(),
     loginServer:start(Simulation),
     {ok, {{one_for_all, 0, 1}, []}}.

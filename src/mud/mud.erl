@@ -1,4 +1,4 @@
--module(simulation).
+-module(mud).
 
 -export([new/0, newPlayer/3, removePlayer/2]).
 
@@ -12,11 +12,11 @@
 
 new() ->
   Pid = spawn(fun() -> init() end),
-  io:fwrite("Simulation: ~p ~n", [Pid]),
+  io:fwrite("fhvMUD: ~p ~n", [Pid]),
   Pid.
 
-newPlayer(Simulation, Player, PlayerName) ->
-  Simulation ! { newPlayer, Player, PlayerName },
+newPlayer(Mud, Player, PlayerName) ->
+  Mud ! { newPlayer, Player, PlayerName },
   receive
     {lobby, Lobby} ->
       Lobby;
@@ -28,8 +28,8 @@ newPlayer(Simulation, Player, PlayerName) ->
       error
   end.
 
-removePlayer(Simulation, Player) ->
-  Simulation ! { removePlayer, Player }.
+removePlayer(Mud, Player) ->
+  Mud ! { removePlayer, Player }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PRIVATE 
@@ -37,28 +37,28 @@ removePlayer(Simulation, Player) ->
 
 init() ->
   Lobby = loadWorld(),
-  io:fwrite("Simulation running ~n"),
+  io:fwrite("fhvMUD running ~n"),
   process(#ctx{lobby=Lobby}).
 
 loadWorld() ->
-  Lobby = lobby:new(self()),
+  Lobby = room:new(self()),
   Lobby.
 
 process(Ctx) ->
   receive 
     {newPlayer, Player, PlayerName} ->
       io:fwrite("New Player ~w with name ~s ~n", [Player, PlayerName]),
-      lobby:playerEnter(Ctx#ctx.lobby, Player, PlayerName),
+      room:playerEnter(Ctx#ctx.lobby, Player, PlayerName),
       Player ! {lobby, Ctx#ctx.lobby},
       process(Ctx);
 
     {removePlayer, Player} ->
-      io:fwrite("simulation: removed player ~w... ~n", [Player]),
+      io:fwrite("fhvMUD: removed player ~w... ~n", [Player]),
       process(Ctx);
 
     Other -> % Flushes the message queue.
       error_logger:error_msg(
-        "Error: Simulation ~w got unknown msg ~w~n.", 
+        "Error: fhvMUD ~w got unknown msg ~w~n.", 
         [self(), Other]),
       process(Ctx)
   end.

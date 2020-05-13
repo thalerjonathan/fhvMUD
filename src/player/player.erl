@@ -2,7 +2,7 @@
 
 -export([new/2, remove/1, enteredRoom/3, sendText/3]).
 
--record(ctx, {sim, sock, room, name}).
+-record(ctx, {mud, sock, room, name}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% NOTES
@@ -19,8 +19,8 @@
 %% PUBLIC 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-new(Simulation, Socket) ->
-  Pid = spawn(fun() -> init(Simulation, Socket) end),
+new(Mud, Socket) ->
+  Pid = spawn(fun() -> init(Mud, Socket) end),
   % give ownership of the socket to the client process
   Ret = gen_tcp:controlling_process(Socket, Pid),
   io:fwrite("controlling_process: ~w ~n", [Ret]),
@@ -40,7 +40,7 @@ enteredRoom(Player, Room, RoomName) ->
 %% PRIVATE 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init(Simulation, Socket) ->
+init(Mud, Socket) ->
   Ret = queryName(Socket),
   case Ret of
     {error, quit} ->
@@ -53,14 +53,14 @@ init(Simulation, Socket) ->
       io:fwrite("Timeout, disconnected player ~w ~n", [self()]);
 
     {ok, PlayerName} ->
-      Lobby = enterLobby(Simulation, PlayerName),
-      Ctx = #ctx{sim = Simulation, sock = Socket, room = Lobby, name = PlayerName},
+      Lobby = enterLobby(Mud, PlayerName),
+      Ctx = #ctx{mud = Mud, sock = Socket, room = Lobby, name = PlayerName},
       sendToSocket(Ctx, "Hello ~s! Welcome to FHV Multi-User Dungeon!\n\n", [PlayerName]),
       process(Ctx)
   end.
 
-enterLobby(Simulation, PlayerName) ->
-  Lobby = simulation:newPlayer(Simulation, self(), PlayerName),
+enterLobby(Mud, PlayerName) ->
+  Lobby = mud:newPlayer(Mud, self(), PlayerName),
   player:enteredRoom(self(), Lobby, "Lobby"),
   Lobby.
 
@@ -83,7 +83,7 @@ queryName(Socket) ->
 process(Ctx) ->
   receive
     {tcp, Socket, <<"quit", _/binary>>} ->
-      lobby:playerLeave(Ctx#ctx.room, self()),
+      room:playerLeave(Ctx#ctx.room, self()),
       gen_tcp:close(Socket);
 
     {tcp, _Socket, Msg} ->
@@ -91,16 +91,16 @@ process(Ctx) ->
       process(Ctx);
   
     {tcp_closed, Socket} ->
-      io:fwrite("player: socket ~w closed by player, removing player from simulation... ~n", [Socket]),
-      lobby:playerLeave(Ctx#ctx.room, self()),
-      simulation:removePlayer(Ctx#ctx.sim, self());
+      io:fwrite("player: socket ~w closed by player, removing player from MUD... ~n", [Socket]),
+      room:playerLeave(Ctx#ctx.room, self()),
+      mud:removePlayer(Ctx#ctx.mud, self());
 
     {enteredRoom, Room, RoomName} ->
       sendToSocket(Ctx, "Entered Room ~w ~s ~n", [Room, RoomName]),
       process(Ctx);
 
     {remove} ->
-      lobby:playerLeave(Ctx#ctx.room, self()),
+      room:playerLeave(Ctx#ctx.room, self()),
       io:fwrite("player: removed ~w ~n", [Ctx#ctx.name]);
 
     {sendText, Text, FormatArgs} ->
@@ -124,7 +124,7 @@ handlePlayerMessage(Binary, Ctx) ->
   case Cmd of
     "say" -> 
       io:fwrite("Player wants to say: ~s ~n", [Msg]),
-      lobby:playerSays(Ctx#ctx.room, self(), tl(Tokens));
+      room:playerSays(Ctx#ctx.room, self(), tl(Tokens));
     _ ->
       io:fwrite("Player does not want to talk")
   end.

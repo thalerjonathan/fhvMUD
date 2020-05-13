@@ -1,16 +1,16 @@
--module(lobby).
+-module(room).
 
 -export([new/1, playerEnter/3, playerSays/3, playerLeave/2]).
 
--record(ctx, {sim, actors}).
+-record(ctx, {mud, actors}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-new(Simulation) ->
+new(Mud) ->
   Actors = maps:new(),
-  Pid = spawn(fun() -> process(#ctx{sim=Simulation, actors=Actors}) end),
+  Pid = spawn(fun() -> process(#ctx{mud=Mud, actors=Actors}) end),
   Pid.
 
 playerEnter(Lobby, Player, PlayerName) ->
@@ -31,8 +31,6 @@ process(Ctx) ->
     {playerEnter, Player, PlayerName} ->
       Actors = Ctx#ctx.actors,
       ActorsAdded = Actors#{ Player => PlayerName },
-      
-      %io:fwrite("Lobby: player ~s entered ~n", [PlayerName]),
       sendToAllActors(Ctx, "Lobby: ~s enterd the room ~n", [PlayerName]),
 
       process(Ctx#ctx{actors=ActorsAdded});
@@ -41,7 +39,6 @@ process(Ctx) ->
       Lookup = maps:find(Player, Ctx#ctx.actors),
       case Lookup of
         {ok, PlayerName} ->
-          %io:fwrite("Lobby: player ~s says: ~s ~n", [PlayerName, Text]),
           sendToAllActors(Ctx, "Lobby: ~s left ~n", [PlayerName]);
 
         error ->
@@ -52,7 +49,6 @@ process(Ctx) ->
       Lookup = maps:find(Player, Ctx#ctx.actors),
       case Lookup of
         {ok, PlayerName} ->
-          %io:fwrite("Lobby: player ~s says: ~s ~n", [PlayerName, Text]),
           sendToAllActors(Ctx, "Lobby: ~s says \"~s\" ~n", [PlayerName, Text]);
 
         error ->
