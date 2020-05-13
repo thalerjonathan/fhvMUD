@@ -1,6 +1,6 @@
 -module(simulation).
 
--export([new/0, newPlayer/2, removePlayer/2]).
+-export([new/0, newPlayer/3, removePlayer/2]).
 
 -record(ctx, {lobby}).
 
@@ -15,8 +15,18 @@ new() ->
   io:fwrite("Simulation: ~p ~n", [Pid]),
   Pid.
 
-newPlayer(Simulation, Player) ->
-  Simulation ! { newPlayer, Player }.
+newPlayer(Simulation, Player, PlayerName) ->
+  Simulation ! { newPlayer, Player, PlayerName },
+  receive
+    {lobby, Lobby} ->
+      Lobby;
+
+    Other -> % Flushes the message queue.
+      error_logger:error_msg(
+        "Error in newPlayer: expected Lobby message~n.", 
+        [self(), Other]),
+      error
+  end.
 
 removePlayer(Simulation, Player) ->
   Simulation ! { removePlayer, Player }.
@@ -36,10 +46,10 @@ loadWorld() ->
 
 process(Ctx) ->
   receive 
-    {newPlayer, Player} ->
-      io:fwrite("New Player ~w ~n", [Player]),
-      player:enteredRoom(Player, Ctx#ctx.lobby, "Lobby"),
-      lobby:playerEnter(Ctx#ctx.lobby, Player),
+    {newPlayer, Player, PlayerName} ->
+      io:fwrite("New Player ~w with name ~s ~n", [Player, PlayerName]),
+      lobby:playerEnter(Ctx#ctx.lobby, Player, PlayerName),
+      Player ! {lobby, Ctx#ctx.lobby},
       process(Ctx);
 
     {removePlayer, Player} ->

@@ -1,19 +1,26 @@
 -module(lobby).
 
--export([new/1, playerEnter/2]).
+-export([new/1, playerEnter/3, playerSays/3, playerLeave/2]).
 
--record(ctx, {sim}).
+-record(ctx, {sim, actors}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 new(Simulation) ->
-  Pid = spawn(fun() -> process(#ctx{sim=Simulation}) end),
+  Actors = maps:new(),
+  Pid = spawn(fun() -> process(#ctx{sim=Simulation, actors=Actors}) end),
   Pid.
 
-playerEnter(Lobby, Player) ->
-  Lobby ! {playerEnter, Player}.
+playerEnter(Lobby, Player, PlayerName) ->
+  Lobby ! {playerEnter, Player, PlayerName}.
+
+playerSays(Lobby, Player, Text) ->
+  Lobby ! {playerSays, Player, Text}.
+
+playerLeave(Lobby, Player) ->
+  Lobby ! {playerLeave, Player}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PRIVATE 
@@ -21,8 +28,37 @@ playerEnter(Lobby, Player) ->
 
 process(Ctx) ->
   receive
-    {playerEnter, Player} ->
-      io:fwrite("Lobby: player ~w entered ~n", [Player]),
+    {playerEnter, Player, PlayerName} ->
+      Actors = Ctx#ctx.actors,
+      ActorsAdded = Actors#{ Player => PlayerName },
+      
+      %io:fwrite("Lobby: player ~s entered ~n", [PlayerName]),
+      sendToAllActors(Ctx, "Lobby: ~s enterd the room ~n", [PlayerName]),
+
+      process(Ctx#ctx{actors=ActorsAdded});
+
+    {playerLeave, Player} ->
+      Lookup = maps:find(Player, Ctx#ctx.actors),
+      case Lookup of
+        {ok, PlayerName} ->
+          %io:fwrite("Lobby: player ~s says: ~s ~n", [PlayerName, Text]),
+          sendToAllActors(Ctx, "Lobby: ~s left ~n", [PlayerName]);
+
+        error ->
+          ok
+      end;
+
+    {playerSays, Player, Text} ->
+      Lookup = maps:find(Player, Ctx#ctx.actors),
+      case Lookup of
+        {ok, PlayerName} ->
+          %io:fwrite("Lobby: player ~s says: ~s ~n", [PlayerName, Text]),
+          sendToAllActors(Ctx, "Lobby: ~s says \"~s\" ~n", [PlayerName, Text]);
+
+        error ->
+          ok
+      end,
+  
       process(Ctx);
 
     Other -> % Flushes the message queue.
@@ -31,3 +67,7 @@ process(Ctx) ->
         [self(), Other]),
       process(Ctx)
   end.
+
+sendToAllActors(Ctx, Text, FormatArgs) ->
+  ActorPids = maps:keys(Ctx#ctx.actors),
+  lists:map(fun(Pid) -> player:sendText(Pid, Text, FormatArgs) end, ActorPids).
